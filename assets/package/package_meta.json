@@ -1,0 +1,5 @@
+{
+    "name": "example-package",
+    "dependencies": ["libfoo", "libbar"],
+    "conflicts": ["libbaz"]
+  }
