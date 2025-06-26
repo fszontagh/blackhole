@@ -6,6 +6,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * Finds all files with the specified extension in the given directory and its subdirectories.
+ * @param directoryPath The path to the directory to search.
+ * @param ext The file extension to search for, defaults to ".list".
+ * @return A vector of file paths for all matching files found.
+ */
 namespace fs = std::filesystem;
 
 class FileUtils {

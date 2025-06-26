@@ -24,6 +24,10 @@ public:
 private:
   std::shared_ptr<Logger> logger;
   nlohmann::json metaData_;
+
+  std::vector<int> splitVersion(const std::string& ver);
+  int compareVersions(const std::string& ver1, const std::string& ver2);
+  bool validatePackage(const std::string& fullSpec, const std::string& pkgName, const std::string& pkgVersion);
 };
 
 #endif // PACKAGE_MANAGER_HPP

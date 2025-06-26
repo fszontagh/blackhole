@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "Config.hpp"
 #include "Logger.hpp"
 #include "PackageManager.hpp"
@@ -32,6 +33,11 @@ int main(int argc, char* argv[]) {
         std::shared_ptr<Logger> logger = std::make_shared<Logger>(filename);
     }
 
+    if (geteuid() != 0) {
+        logger->error("Please run as root", true, false, true);
+        return 1;
+    }
+
     Config config(logger);
 
     if (logger->isFileLoggingEnabled() == false) {
@@ -42,8 +48,7 @@ int main(int argc, char* argv[]) {
 
     auto positional = parser.getPositionalArgs();
     if (!positional.empty()) {
-        if (std::find(positional.begin(), positional.end(), "help") !=
-            positional.end()) {
+        if (std::find(positional.begin(), positional.end(), "help") != positional.end()) {
             logger->info("Usage: " + std::string(argv[0]) + " <command> <package>\n" + commands_help(), true, true, true);
             return 0;
         }
@@ -70,7 +75,7 @@ int main(int argc, char* argv[]) {
             } else if (arg == "clean") {
                 logger->info("Cleaning caches", true, true, true);
             } else {
-                logger->info("Unknown command: " + arg, true, true, true);
+                logger->info("Unknown command: " + arg + "\n" + commands_help(), true, true, true);
             }
         }
     }
