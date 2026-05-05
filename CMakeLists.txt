@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(blackhole VERSION 0.1 LANGUAGES CXX)
+project(blackhole VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -47,4 +47,9 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src 
 
 if (BUILD_CREATOR)
     add_subdirectory(creator)
+endif()
+
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
