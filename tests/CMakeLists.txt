@@ -3,6 +3,7 @@ include(CTest)
 
 set(TEST_SOURCES
     test_main.cpp
+    test_packagemeta_v1.cpp
 )
 
 add_executable(blackhole_tests ${TEST_SOURCES})
