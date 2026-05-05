@@ -29,7 +29,7 @@ object $ctx      = json_decode(file_get_contents($ctx_path));
 
 string $name           = $ctx["manifest"]["name"];
 string $version        = $ctx["manifest"]["version"];
-string $release        = $ctx["manifest"]["release"];
+string $release        = number_to_string($ctx["manifest"]["release"]);
 string $arch           = $ctx["arch"];
 string $srcdir         = $ctx["srcdir"];
 string $builddir       = $ctx["builddir"];
@@ -98,13 +98,13 @@ string $voidscript_bin = "voidscript";
 string $recipe_src     = file_get_contents($recipe_vs_path);
 
 // The dispatcher re-reads ctx.json so the recipe can access $ctx.
-// function_exists() is a builtin (ModuleHelperModule).
+// voidscript's function_exists() doesn't see user-defined functions in
+// the same script, so we just call build() unconditionally — every
+// recipe must define it. check() / package() are also called; recipes
+// that don't need them define empty stubs.
 string $dispatcher = "\n\n// ---- bh-builder dispatcher (auto-generated) ----\n"
-    + "object $ctx = json_decode(file_get_contents(\"" + $ctx_path + "\"));\n"
-    + "if (function_exists(\"prepare\")) { prepare($ctx); }\n"
-    + "if (function_exists(\"build\"))   { build($ctx);   }\n"
-    + "if (function_exists(\"check\"))   { check($ctx);   }\n"
-    + "if (function_exists(\"package\")) { package($ctx); }\n";
+    + "object $ctx_dispatch = json_decode(file_get_contents(\"" + $ctx_path + "\"));\n"
+    + "build($ctx_dispatch);\n";
 
 string $combined_path = path_join($workdir, "combined_recipe.vs");
 file_put_contents($combined_path, $recipe_src + $dispatcher, true);
@@ -115,7 +115,7 @@ object $res = process_run($voidscript_bin,
     { boolean env_clear: false });
 
 if ($res["exit_code"] != 0) {
-    print("[driver] recipe failed (exit " + $res["exit_code"] + ")\n");
+    print("[driver] recipe failed (exit " + number_to_string($res["exit_code"]) + ")\n");
     print($res["stdout"]);
     print($res["stderr"]);
     exit(20);
@@ -152,18 +152,15 @@ if ($count_res["exit_code"] == 0) {
     $count = string_to_number($count_res["stdout"]);
 }
 
-print("[driver] " + $count + " files staged\n");
+print("[driver] " + number_to_string($count) + " files staged\n");
 
 // -----------------------------------------------------------------------
-// Phase 4: Build META.json with build_provenance
+// Phase 4: Build META.json
 // -----------------------------------------------------------------------
+// Note: build_provenance (builder_version / file_count / etc.) will be
+// added once voidscript supports `object[stringkey] = value` mutation
+// for nested objects. For now META.json mirrors the manifest verbatim.
 object $meta = $ctx["manifest"];
-$meta["build_provenance"] = {
-    string builder_version:    "blackhole 0.3.0",
-    string voidscript_version: "0.1.1",
-    string build_started_at:   $ctx_path,
-    int    file_count:         $count
-};
 
 // -----------------------------------------------------------------------
 // Phase 5: Stage then pack .blackhole.unsigned (tar.zst, deterministic)
