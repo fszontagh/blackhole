@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_CREATOR "Build creator" ON)
+option(BUILD_BUILDER "Build the bh-builder recipe-build tool" ON)
 option(ENABLE_COLORS "Enable colors" ON)
 
 set(CONFIG_DIRECTORY "/etc/blackhole" CACHE STRING "The default configuration directory")
@@ -48,6 +49,10 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src 
 
 if (BUILD_CREATOR)
     add_subdirectory(creator)
+endif()
+
+if (BUILD_BUILDER)
+    add_subdirectory(builder)
 endif()
 
 if (BUILD_TESTS)
