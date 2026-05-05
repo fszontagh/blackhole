@@ -1,6 +1,7 @@
 #ifndef _BLACKHOLE_PACKAGEMETA_V1_HPP_
 #define _BLACKHOLE_PACKAGEMETA_V1_HPP_
 
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -69,6 +70,13 @@ inline void to_json(nlohmann::json& j, const PackageMetaV1& m) {
     };
 }
 
+// name and version are interpolated into shell commands by the build driver
+// (FILES.sha256 pipelines) and into the package filename. Restrict to a
+// charset that's safe in both contexts: alphanumerics plus the four
+// punctuation chars conventional distros allow in package and version
+// strings (Arch, Debian, RPM all accept this subset).
+inline static const std::regex kSafeIdentRe("^[A-Za-z0-9._+-]+$");
+
 inline void from_json(const nlohmann::json& j, PackageMetaV1& m) {
     j.at("schema_version").get_to(m.schema_version);
     if (m.schema_version != 1) {
@@ -76,7 +84,13 @@ inline void from_json(const nlohmann::json& j, PackageMetaV1& m) {
                                  std::to_string(m.schema_version));
     }
     j.at("name").get_to(m.name);
+    if (!std::regex_match(m.name, kSafeIdentRe)) {
+        throw std::runtime_error("PackageMetaV1: name must match [A-Za-z0-9._+-]+, got: " + m.name);
+    }
     j.at("version").get_to(m.version);
+    if (!std::regex_match(m.version, kSafeIdentRe)) {
+        throw std::runtime_error("PackageMetaV1: version must match [A-Za-z0-9._+-]+, got: " + m.version);
+    }
     j.at("release").get_to(m.release);
     j.at("epoch").get_to(m.epoch);
     j.at("description").get_to(m.description);

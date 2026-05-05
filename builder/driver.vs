@@ -131,7 +131,7 @@ print("[driver] building FILES.sha256\n");
 
 object $sha_res = process_run("sh",
     ["-c",
-     "find " + $pkgdir + " -type f | sort | xargs -r sha256sum | sed 's|  " + $pkgdir + "/|  |'"],
+     "LC_ALL=C find " + $pkgdir + " -type f | LC_ALL=C sort | xargs -r sha256sum | sed 's|  " + $pkgdir + "/|  |'"],
     { boolean env_clear: false });
 
 if ($sha_res["exit_code"] != 0) {
@@ -200,6 +200,10 @@ if ($tar_res["exit_code"] != 0) {
     print($tar_res["stderr"]);
     exit(30);
 }
+
+// Clean up intermediates we no longer need (combined recipe + stage tree).
+file_rm_rf($combined_path);
+file_rm_rf($stage);
 
 print("[driver] wrote " + $out_path + "\n");
 exit(0);
