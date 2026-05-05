@@ -29,7 +29,13 @@ nlohmann::json CtxBuilder::build(const Manifest& m) const {
 
     nlohmann::json sources = nlohmann::json::array();
     for (const auto& s : m.sources) {
-        sources.push_back({{"url", s.url}, {"sha256", s.sha256}, {"extract", s.extract}});
+        sources.push_back({
+            {"url", s.url},
+            {"sha256", s.sha256},
+            {"extract", s.extract},
+            {"extract_to", s.extract_to},
+            {"strip_components", s.strip_components}
+        });
     }
     ctx["sources"] = sources;
 

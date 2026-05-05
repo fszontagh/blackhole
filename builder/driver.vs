@@ -80,10 +80,18 @@ for (object $src : $ctx["sources"]) {
     print("[driver] verified " + $file_name + "\n");
 
     if ($src["extract"]) {
-        archive_extract($cache_path, $srcdir, {
-            int strip_components: 1
+        string $dest = $srcdir;
+        if ($src["extract_to"] != "") {
+            $dest = path_join($srcdir, $src["extract_to"]);
+            mkdir($dest, true);
+        }
+        // CtxBuilder always emits strip_components (default 1 from the
+        // C++ schema) so we can read it directly without null guard.
+        int $strip = $src["strip_components"];
+        archive_extract($cache_path, $dest, {
+            int strip_components: $strip
         });
-        print("[driver] extracted " + $file_name + " -> " + $srcdir + "\n");
+        print("[driver] extracted " + $file_name + " -> " + $dest + "\n");
     }
 }
 
