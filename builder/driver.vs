@@ -163,12 +163,16 @@ if ($count_res["exit_code"] == 0) {
 print("[driver] " + number_to_string($count) + " files staged\n");
 
 // -----------------------------------------------------------------------
-// Phase 4: Build META.json
+// Phase 4: Build META.json with build_provenance
 // -----------------------------------------------------------------------
-// Note: build_provenance (builder_version / file_count / etc.) will be
-// added once voidscript supports `object[stringkey] = value` mutation
-// for nested objects. For now META.json mirrors the manifest verbatim.
 object $meta = $ctx["manifest"];
+object $provenance = {
+    string builder_version:    "blackhole 0.3.0",
+    string voidscript_version: "0.6.0",
+    string build_started_at:   $ctx_path,
+    int    file_count:         $count
+};
+object_set($meta, "build_provenance", $provenance);
 
 // -----------------------------------------------------------------------
 // Phase 5: Stage then pack .blackhole.unsigned (tar.zst, deterministic)
