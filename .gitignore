@@ -37,3 +37,6 @@ build
 .cache
 .vscode
 .worktrees
+
+# clangd: symlink to build/compile_commands.json for IDE support
+compile_commands.json
