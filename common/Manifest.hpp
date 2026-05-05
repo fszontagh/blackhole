@@ -49,7 +49,7 @@ inline void from_json(const nlohmann::json& j, BuildSpec& b) {
             b.make_jobs_auto = false;
             b.make_jobs = mj.get<int>();
         } else {
-            throw std::runtime_error("build.make_jobs must be \"auto\" or integer");
+            throw std::runtime_error("build.make_jobs must be \"auto\" or integer, got: " + mj.dump());
         }
     }
 }
