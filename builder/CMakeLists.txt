@@ -3,6 +3,7 @@ set(EXECUTABLE_NAME bh-builder)
 
 set(SOURCES
     src/main.cpp
+    src/CtxBuilder.cpp
     ../common/Logger.cpp
     ../common/ParamParser.cpp
 )

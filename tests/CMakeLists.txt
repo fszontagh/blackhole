@@ -5,6 +5,8 @@ set(TEST_SOURCES
     test_main.cpp
     test_packagemeta_v1.cpp
     test_manifest.cpp
+    test_ctxbuilder.cpp
+    ${PROJECT_SOURCE_DIR}/builder/src/CtxBuilder.cpp
 )
 
 add_executable(blackhole_tests ${TEST_SOURCES})
@@ -12,6 +14,7 @@ add_executable(blackhole_tests ${TEST_SOURCES})
 target_include_directories(blackhole_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/common
     ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/builder/src
     ${PROJECT_SOURCE_DIR}/tests/third_party
 )
 
