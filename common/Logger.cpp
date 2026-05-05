@@ -92,3 +92,23 @@ std::string Logger::levelToString(LogLevel level) {
             return "UNKNOWN";
     }
 }
+
+void Logger::info(const std::string& message, bool forceStdout, bool disableColors, bool disableTimestamp) {
+    log(LogLevel::INFO, message, forceStdout, disableColors, disableTimestamp);
+}
+
+void Logger::warn(const std::string& message, bool forceStdout, bool disableColors, bool disableTimestamp) {
+    log(LogLevel::WARNING, message, forceStdout, disableColors, disableTimestamp);
+}
+
+void Logger::error(const std::string& message, bool forceStdout, bool disableColors, bool disableTimestamp) {
+    log(LogLevel::ERROR, message, forceStdout, disableColors, disableTimestamp);
+}
+
+void Logger::debug(const std::string& message, bool forceStdout, bool disableColors, bool disableTimestamp) {
+    log(LogLevel::DEBUG, message, forceStdout, disableColors, disableTimestamp);
+}
+
+bool Logger::isFileLoggingEnabled() const {
+    return fileStream_.is_open();
+}
