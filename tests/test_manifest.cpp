@@ -80,3 +80,37 @@ TEST_CASE("Manifest::load rejects unknown build.system", "[manifest]") {
 
     REQUIRE_THROWS_AS(Manifest::load(p), std::runtime_error);
 }
+
+TEST_CASE("Manifest::Source honors extract_to + strip_components", "[manifest]") {
+    auto p = write_temp_manifest(R"({
+      "schema_version": 1, "name": "x", "version": "1",
+      "release": 1, "epoch": 0, "description": "", "homepage": "",
+      "license": [], "maintainer": {"name":"","email":""},
+      "archs": ["x86_64"], "libcs": ["glibc"],
+      "sources": [
+        {"url":"https://x/a.tar.gz",
+         "sha256":"0000000000000000000000000000000000000000000000000000000000000000",
+         "extract": true},
+        {"url":"https://x/b.tar.gz",
+         "sha256":"1111111111111111111111111111111111111111111111111111111111111111",
+         "extract": true,
+         "extract_to": "subdir/b",
+         "strip_components": 0}
+      ],
+      "build": {"system":"configure","options":[],"make_jobs":"auto"},
+      "depends": {"build":[],"runtime":[],"optional":[],"conflicts":[]},
+      "provides": [], "replaces": [],
+      "triggers": {"post_install": null, "pre_remove": null}
+    })");
+
+    Manifest m = Manifest::load(p);
+    REQUIRE(m.sources.size() == 2);
+
+    // Default values when not specified.
+    REQUIRE(m.sources[0].extract_to == "");
+    REQUIRE(m.sources[0].strip_components == 1);
+
+    // Explicit values round-trip.
+    REQUIRE(m.sources[1].extract_to == "subdir/b");
+    REQUIRE(m.sources[1].strip_components == 0);
+}
