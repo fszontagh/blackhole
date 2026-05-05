@@ -106,13 +106,16 @@ string $voidscript_bin = "voidscript";
 string $recipe_src     = file_get_contents($recipe_vs_path);
 
 // The dispatcher re-reads ctx.json so the recipe can access $ctx.
-// voidscript's function_exists() doesn't see user-defined functions in
-// the same script, so we just call build() unconditionally — every
-// recipe must define it. check() / package() are also called; recipes
-// that don't need them define empty stubs.
+// build() is mandatory; prepare/check/package are optional —
+// voidscript's function_exists (post-fix 52e4b31) sees user-defined
+// functions, so these branches just skip if the recipe didn't
+// define them.
 string $dispatcher = "\n\n// ---- bh-builder dispatcher (auto-generated) ----\n"
     + "object $ctx_dispatch = json_decode(file_get_contents(\"" + $ctx_path + "\"));\n"
-    + "build($ctx_dispatch);\n";
+    + "if (function_exists(\"prepare\")) { prepare($ctx_dispatch); }\n"
+    + "build($ctx_dispatch);\n"
+    + "if (function_exists(\"check\"))   { check($ctx_dispatch);   }\n"
+    + "if (function_exists(\"package\")) { package($ctx_dispatch); }\n";
 
 string $combined_path = path_join($workdir, "combined_recipe.vs");
 file_put_contents($combined_path, $recipe_src + $dispatcher, true);
