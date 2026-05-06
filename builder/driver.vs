@@ -80,10 +80,18 @@ for (object $src : $ctx["sources"]) {
     print("[driver] verified " + $file_name + "\n");
 
     if ($src["extract"]) {
-        archive_extract($cache_path, $srcdir, {
-            int strip_components: 1
+        string $dest = $srcdir;
+        if ($src["extract_to"] != "") {
+            $dest = path_join($srcdir, $src["extract_to"]);
+            mkdir($dest, true);
+        }
+        // CtxBuilder always emits strip_components (default 1 from the
+        // C++ schema) so we can read it directly without null guard.
+        int $strip = $src["strip_components"];
+        archive_extract($cache_path, $dest, {
+            int strip_components: $strip
         });
-        print("[driver] extracted " + $file_name + " -> " + $srcdir + "\n");
+        print("[driver] extracted " + $file_name + " -> " + $dest + "\n");
     }
 }
 
@@ -98,13 +106,16 @@ string $voidscript_bin = "voidscript";
 string $recipe_src     = file_get_contents($recipe_vs_path);
 
 // The dispatcher re-reads ctx.json so the recipe can access $ctx.
-// voidscript's function_exists() doesn't see user-defined functions in
-// the same script, so we just call build() unconditionally — every
-// recipe must define it. check() / package() are also called; recipes
-// that don't need them define empty stubs.
+// build() is mandatory; prepare/check/package are optional —
+// voidscript's function_exists (post-fix 52e4b31) sees user-defined
+// functions, so these branches just skip if the recipe didn't
+// define them.
 string $dispatcher = "\n\n// ---- bh-builder dispatcher (auto-generated) ----\n"
     + "object $ctx_dispatch = json_decode(file_get_contents(\"" + $ctx_path + "\"));\n"
-    + "build($ctx_dispatch);\n";
+    + "if (function_exists(\"prepare\")) { prepare($ctx_dispatch); }\n"
+    + "build($ctx_dispatch);\n"
+    + "if (function_exists(\"check\"))   { check($ctx_dispatch);   }\n"
+    + "if (function_exists(\"package\")) { package($ctx_dispatch); }\n";
 
 string $combined_path = path_join($workdir, "combined_recipe.vs");
 file_put_contents($combined_path, $recipe_src + $dispatcher, true);
@@ -155,12 +166,16 @@ if ($count_res["exit_code"] == 0) {
 print("[driver] " + number_to_string($count) + " files staged\n");
 
 // -----------------------------------------------------------------------
-// Phase 4: Build META.json
+// Phase 4: Build META.json with build_provenance
 // -----------------------------------------------------------------------
-// Note: build_provenance (builder_version / file_count / etc.) will be
-// added once voidscript supports `object[stringkey] = value` mutation
-// for nested objects. For now META.json mirrors the manifest verbatim.
 object $meta = $ctx["manifest"];
+object $provenance = {
+    string builder_version:    "blackhole 0.3.0",
+    string voidscript_version: "0.6.0",
+    string build_started_at:   $ctx_path,
+    int    file_count:         $count
+};
+object_set($meta, "build_provenance", $provenance);
 
 // -----------------------------------------------------------------------
 // Phase 5: Stage then pack .blackhole.unsigned (tar.zst, deterministic)

@@ -15,15 +15,23 @@ struct Source {
     std::string url;
     std::string sha256;
     bool extract = true;
+    std::string extract_to;          // relative path inside $srcdir; "" = root
+    int strip_components = 1;        // tar --strip-components; 0 to disable
 };
 
 inline void from_json(const nlohmann::json& j, Source& s) {
     j.at("url").get_to(s.url);
     j.at("sha256").get_to(s.sha256);
-    if (j.contains("extract")) j.at("extract").get_to(s.extract);
+    if (j.contains("extract"))           j.at("extract").get_to(s.extract);
+    if (j.contains("extract_to"))        j.at("extract_to").get_to(s.extract_to);
+    if (j.contains("strip_components"))  j.at("strip_components").get_to(s.strip_components);
     static const std::regex hex64("^[0-9a-fA-F]{64}$");
     if (!std::regex_match(s.sha256, hex64)) {
         throw std::runtime_error("source sha256 not 64-char hex: " + s.sha256);
+    }
+    if (s.strip_components < 0) {
+        throw std::runtime_error("source strip_components must be >= 0, got " +
+                                 std::to_string(s.strip_components));
     }
 }
 
